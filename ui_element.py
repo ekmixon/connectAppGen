@@ -4,18 +4,19 @@ from IPython.display import display, HTML
 class connectParams: 
     def __init__(self, name, paramType = '', beginParam = 1, defaultParams = 3, maxParams = 10, displayPanel=True):
         """paramType could be: blank (no type), panel, properties"""
-        
+
         self.name = name
         self.paramType = paramType
         self.panelParams = []
         self.panelParamsType = []
-        self.panelVForm = widgets.Label(f'Please choose how many {self.name} (Parameters) you want to generate') 
+        self.panelVForm = widgets.Label(f'Please choose how many {self.name} (Parameters) you want to generate')
         self.dd = widgets.Dropdown(
-                options=[i for i in range(beginParam, maxParams)],
-                value=defaultParams,
-                description=f'{self.name}: ',
-                disabled=False,
-            )
+            options=list(range(beginParam, maxParams)),
+            value=defaultParams,
+            description=f'{self.name}: ',
+            disabled=False,
+        )
+
 
         self.btn_gen = widgets.Button(description=f"Gen {self.name}")
         self.btn_gen.on_click(self.on_panel_header_params_click)
