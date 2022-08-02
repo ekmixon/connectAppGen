@@ -17,7 +17,7 @@ def load_metadata(fileName = 'metadata.yaml'):
 
         if not os.path.isfile(filepath):
             # fileName does not exist in folder TEMPLATES_FOLDER
-            print("Error: Unable to find metadata file: %s " %filepath)
+            print(f"Error: Unable to find metadata file: {filepath} ")
             return None
 
         with open(filepath) as file:
@@ -27,14 +27,17 @@ def load_metadata(fileName = 'metadata.yaml'):
             # do basic santiy checks
             for key in ['main', 'panels', 'properties','actions','scripts']:
                 if key not in list(metadata.keys()):
-                    print("Error: key %s does not exist in metadata keys list: %s"%(key, str(metadata.keys())))
+                    print(
+                        f"Error: key {key} does not exist in metadata keys list: {str(metadata.keys())}"
+                    )
+
                     return None
 
             return metadata
 
         return None
     except:
-        print( "Error: Unable to load meta-data File: %s" %filepath)
+        print(f"Error: Unable to load meta-data File: {filepath}")
         return None
 
 def load_connectApp(fileName):
@@ -42,7 +45,7 @@ def load_connectApp(fileName):
     try:
         if not os.path.isfile(fileName):
             # fileName does not exist in folder TEMPLATES_FOLDER
-            print("Error: Unable to find yaml file: %s " %fileName)
+            print(f"Error: Unable to find yaml file: {fileName} ")
             return None
 
         with open(fileName) as file:
@@ -52,7 +55,10 @@ def load_connectApp(fileName):
             # do basic santiy checks
             for key in ['name', 'panels', 'properties','actions','scripts']:
                 if key not in list(connectApp.keys()):
-                    print("Error: key %s does not exist in metadata keys list: %s"%(key, str(connectApp.keys())))
+                    print(
+                        f"Error: key {key} does not exist in metadata keys list: {str(connectApp.keys())}"
+                    )
+
                     return None
 
             return connectApp
@@ -60,7 +66,7 @@ def load_connectApp(fileName):
         return None
 
     except:
-        print( "Error: Unable to load Connect App File: %s" %fileName)
+        print(f"Error: Unable to load Connect App File: {fileName}")
         return None
 
 def saveConf(fileName, confDict):
@@ -72,11 +78,11 @@ def saveConf(fileName, confDict):
         with open(fileName, 'w') as outfile:
             json.dump(confDict, outfile, indent=4)
 
-        print("Writing Configurations to: %s" % fileName)
+        print(f"Writing Configurations to: {fileName}")
 
         return True
     except:
-        print("Error while writing file: %s"% fileName)
+        print(f"Error while writing file: {fileName}")
         return False
 
 
@@ -97,7 +103,7 @@ def generateSconf(fileName, output='system.conf', debug=False):
     # loading connectApp Yaml file
     connectApp = load_connectApp(fileName)
     if debug and connectApp:
-        print("loaded connectApp file %s correctly."% fileName)
+        print(f"loaded connectApp file {fileName} correctly.")
 
     if not metadata or not connectApp:
         return None
@@ -115,7 +121,7 @@ def generateSconf(fileName, output='system.conf', debug=False):
 
         # print debug information
         if debug:
-            print("debug: following key-value added: %s:%s"%(key, connectApp[key]))
+            print(f"debug: following key-value added: {key}:{connectApp[key]}")
 
     try:
         # lower case the appName - to be used in default naming convention
@@ -123,12 +129,10 @@ def generateSconf(fileName, output='system.conf', debug=False):
 
         # print debug information
         if debug:
-            print("debug: appName added: %s"%appName)
+            print(f"debug: appName added: {appName}")
 
         # create panels list of Objects
-        sconf['panels'] = []
-        sconf['panels'].append({})
-
+        sconf['panels'] = [{}]
         # get panels dict
         panels = connectApp['panels']
 
@@ -140,10 +144,13 @@ def generateSconf(fileName, output='system.conf', debug=False):
 
         # print debug information
         if debug:
-            print("debug: following keys added to panels[0]: %s"%str(list(panels.keys())))
+            print(f"debug: following keys added to panels[0]: {list(panels.keys())}")
 
         if debug:
-            print("debug: following panel fields will be processed: %s"%str(list(panels['fields'])))
+            print(
+                f"debug: following panel fields will be processed: {list(panels['fields'])}"
+            )
+
 
         # fill the fields
         sconf['panels'][0]['fields'] = []
@@ -156,20 +163,16 @@ def generateSconf(fileName, output='system.conf', debug=False):
                 k = list(key.keys())[0]
                 v = list(key.values())[0]
                 field['display'] = k
-                field['field ID'] = 'connect_%s_%s' %(appName, k.lower().replace(' ', '_'))
+                field['field ID'] = f"connect_{appName}_{k.lower().replace(' ', '_')}"
                 field['type'] = v
                 field['add to column'] = 'false'
                 field['mandatory'] = 'true'
                 field['show column'] = 'false'
                 field['identifier'] = 'true'
                 field['tooltip'] = k
-                sconf['panels'][0]['fields'].append(field)
-                if debug:
-                    print("debug: following field will be added to Panel fields: %s"%str(field))
-
             else:
                 field['display'] = key
-                field['field ID'] = 'connect_%s_%s' %(appName, key.lower().replace(' ', '_'))
+                field['field ID'] = f"connect_{appName}_{key.lower().replace(' ', '_')}"
                 field['type'] = 'shortString'
                 field['mandatory'] = 'true'
                 field['add to column'] = 'true'
@@ -180,29 +183,38 @@ def generateSconf(fileName, output='system.conf', debug=False):
                     field['show column'] = 'false'
                 field['identifier'] = 'true'
                 field['tooltip'] = key
-                sconf['panels'][0]['fields'].append(field)
-
-                if debug:
-                    print("debug: following field will be added to Panel fields: %s"%str(field))
+            sconf['panels'][0]['fields'].append(field)
+            if debug:
+                print(f"debug: following field will be added to Panel fields: {field}")
 
         # add certification validation
         sconf['panels'][0]['fields'].append({'certification validation': True})
 
         # add focal appliance and proxy options
-        sconf['panels'].append({'focal appliance': True,
-         'title': 'Assign CounterACT Devices',
-         'description': '<html>Select the connecting CounterACT device that will communicate with the targeted %s instance, including requests by other CounterACT devices. Specific CounterACT devices assigned here cannot be assigned to another server elsewhere.<br><br>If you do not assign specific devices, by default, all devices will be assigned to one server. This server becomes known as the Default Server.<html>' % sconf['name'] })
+        sconf['panels'].append(
+            {
+                'focal appliance': True,
+                'title': 'Assign CounterACT Devices',
+                'description': f"<html>Select the connecting CounterACT device that will communicate with the targeted {sconf['name']} instance, including requests by other CounterACT devices. Specific CounterACT devices assigned here cannot be assigned to another server elsewhere.<br><br>If you do not assign specific devices, by default, all devices will be assigned to one server. This server becomes known as the Default Server.<html>",
+            }
+        )
 
-        sconf['panels'].append({'proxy server': True,
-         'title': 'Proxy Server',
-         'description': '<html>Select a Proxy Server device to manage all communication between CounterACT and %s.</html>'% sconf['name']})
+
+        sconf['panels'].append(
+            {
+                'proxy server': True,
+                'title': 'Proxy Server',
+                'description': f"<html>Select a Proxy Server device to manage all communication between CounterACT and {sconf['name']}.</html>",
+            }
+        )
+
 
         if debug:
                 print("debug: adding default remaining configurations.")
 
         # add remaining default options
         field = {}
-        field['title'] = "%s Options" % sconf['name']
+        field['title'] = f"{sconf['name']} Options"
         field['description'] = field['title']
         field['fields'] = [{'host discovery': True,
           'display': 'Discovery Frequency',
@@ -222,7 +234,7 @@ def generateSconf(fileName, output='system.conf', debug=False):
 
         # Save config file to connect App Folder
         # generate path based on connect app name + _ + version
-        path = "%s_%s"%(sconf['name'].lower() , sconf['version'])
+        path = f"{sconf['name'].lower()}_{sconf['version']}"
 
         # if directory does not exist make-dir
         if not os.path.isdir(path):

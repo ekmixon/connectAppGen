@@ -6,10 +6,10 @@ from generator import load_metadata
 
 def getModel(appPath):
     """ Builds the YAML Model out of existing connect App referenced by folder name. """
-    
+
     propFile = os.path.join(appPath, 'property.conf')
     systemFile = os.path.join(appPath, 'system.conf')
-    
+
     try:
         with open(propFile) as json_file:
             pConf = json.load(json_file)
@@ -19,15 +19,15 @@ def getModel(appPath):
     except: 
         print("Error while Loading Configurations files...")
         return None 
-    
-    
+
+
     ## yConf is final Object to be converted to YAML. 
     yConf = {}
-    
+
     ## Parse System Config File 
-    
+
     try:
-        
+
         for k in list(sConf.keys()):
             if k in meta['system_main']:
                 yConf[k] = sConf[k]
@@ -46,15 +46,15 @@ def getModel(appPath):
                         fieldNameList= [x for x in field['field ID'].split('_') if x not in excludeList]
                         yConf['panels']['fields'].append(" ".join(fieldNameList).strip().capitalize())          
 
-        
+
     except: 
         print("Error in processing System.conf file!")
         return None 
-    
+
     try: 
-        ## Parse Property Config File 
+        ## Parse Property Config File
         if 'properties' in list(pConf.keys()):
-            yConf['properties'] = [] 
+            yConf['properties'] = []
             for prop in pConf['properties']:
                 obj = {}
                 tagName = ""
@@ -73,17 +73,17 @@ def getModel(appPath):
                         elif attr in meta['propertyLists']:
                             obj[tagName][attr] = []
                             for attrItem in prop[attr]:
-                                if attr == 'subfields':
-                                    obj[tagName][attr].append(attrItem['tag'])
-                                elif attr == 'options':
+                                if attr == 'options':
                                     obj[tagName][attr].append(attrItem['name'])
 
+                                elif attr == 'subfields':
+                                    obj[tagName][attr].append(attrItem['tag'])
                     yConf['properties'].append(obj)
-    
+
     except: 
         print("Error in processing Properties in property.conf file!")
         return None 
-    
+
     try: 
         if 'actions' in list(pConf.keys()):
             yConf['actions'] = []
@@ -114,11 +114,11 @@ def getModel(appPath):
 
                 ## update the Actions with the created object obj
                 yConf['actions'].append({actionName: obj})
-    
+
     except: 
         print("Error in processing Actions in property.conf file!")
         return None
-    
+
     try:
         if 'scripts' in list(pConf.keys()):
             yConf['scripts'] = []
@@ -140,35 +140,35 @@ def getModel(appPath):
                         excludeList = ['connect', yConf['name'].lower()]
                         actionNameList = [x for x in action.split('_') if x not in excludeList]
                         actionName = " ".join(actionNameList).strip().capitalize()
-                        obj = {"%s"%finaleScriptName: {'action': "%s"%actionName}}
+                        obj = {f"{finaleScriptName}": {'action': f"{actionName}"}}
                     if 'is_cancel' in list(script.keys()):
                         obj[finaleScriptName]['is_cancel'] = script['is_cancel']
-                    yConf['scripts'].append(obj)  
+                    yConf['scripts'].append(obj)
                     obj = {}
-    
+
     except: 
         print("Error in processing Scripts in property.conf file!")
         return None
-    
+
     try: 
-        # default fileName of the output 
-        yaml_file = "%s_model.yaml" % yConf['name'].lower()
-        i = 1 
+        # default fileName of the output
+        yaml_file = f"{yConf['name'].lower()}_model.yaml"
+        i = 1
         # if file exists, update filename(x) to iterate through the first non-existing filename(x)
         while os.path.exists(yaml_file):
-            yaml_file = "%s_model(%s).yaml" % (yConf['name'].lower(), i)
+            yaml_file = f"{yConf['name'].lower()}_model({i}).yaml"
             i+=1
 
         with open(yaml_file, 'w') as file:
-            print("Generating file: %s"%yaml_file)
+            print(f"Generating file: {yaml_file}")
             yaml.Dumper.ignore_aliases = lambda *args : True
             yamlOutput = yaml.safe_dump(yConf, file, explicit_start=True, default_flow_style=False, \
                               sort_keys=True, indent=2 )
-    
+
     except: 
-        print("Error while writing the model YAML file %s!"%yaml_file)
+        print(f"Error while writing the model YAML file {yaml_file}!")
         return None
-    
+
     return yamlOutput
 
 def main():
